@@ -123,7 +123,7 @@
 <div class="rainbow-bar"></div>
 <header>
   <h1>🏳️‍🌈 DivulgaEsquerda</h1>
-  <p class="header-desc">Contra o boicote financeiro à pessoas de esquerda, LGBT+, e anti extrema direita. Divulgação gratuita de prestadores de serviços e empreendimentos pró-LGBT em Londrina e região.</p>
+  <p class="header-desc">  Divulgação gratuita de prestadores de serviços e empreendimentos em Londrina e região, contra o boicote financeiro à pessoas de esquerda, LGBT+, e anti extrema direita.</p>
 </header>
 
 <div class="controls">
