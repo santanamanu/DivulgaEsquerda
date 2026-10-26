@@ -35,7 +35,7 @@
 <div class="rainbow-bar"></div>
 <header>
   <h1>🏳️‍🌈 DivulgaEsquerda</h1>
-  <p class="header-desc">Divulgação gratuita de prestadores de serviços em Londrina e região, contra o boicote financeiro à pessoas de esquerda, LGBT+, e anti extrema direita.</p>
+  <p class="header-desc">Contra o boicote financeiro à pessoas de esquerda, LGBT+, e anti extrema direita. Divulgação gratuita de prestadores de serviços e empreendimentos pró-LGBT em Londrina e região.</p>
 </header>
 
 <div class="controls">
@@ -49,8 +49,8 @@
 
 <script>
   // =====================================================================
-  // COLE O ID DA SUA PLANILHA AQUI ENTRE AS ASPAS (Passo 2):
-  const ID_DA_PLANILHA = "1aSoAyOQ0DsC0sDUBzyDHFebWPRRM45jmrMkVZlV0Jqg"; 
+  // COLE O ID DA SUA PLANILHA AQUI ENTRE AS ASPAS:
+  const ID_DA_PLANILHA = "COLE_SEU_ID_AQUI"; 
   // =====================================================================
 
   const feed = document.getElementById('feed');
@@ -61,7 +61,6 @@
 
   async function carregarPlanilha() {
     try {
-      // Transforma a planilha pública em dados que o site consegue ler
       const url = `https://opensheet.elk.sh/${ID_DA_PLANILHA}/1`;
       const resposta = await fetch(url);
       const dados = await resposta.json();
@@ -73,13 +72,12 @@
       render();
     } catch (erro) {
       console.error("Erro:", erro);
-      feed.innerHTML = '<p class="empty">Erro ao carregar serviços. Verifique a planilha.</p>';
+      feed.innerHTML = '<p class="empty">Erro ao carregar serviços. Aguarde 1 minuto e atualize a página.</p>';
     }
   }
 
   function criarChips() {
     chipsContainer.innerHTML = '';
-    // Pega as categorias únicas da sua planilha
     const categorias = ['Todos', ...new Set(servicos.map(s => s.Categoria).filter(Boolean))];
     
     categorias.forEach(cat => {
@@ -102,10 +100,16 @@
 
     const filtrados = servicos.filter(s => {
       const okCat = categoriaAtiva === 'Todos' || s.Categoria === categoriaAtiva;
+      
+      // Previne erro caso a célula esteja vazia
+      const sNome = s.Nome || "";
+      const sServico = s.Servico || s['Serviço'] || "";
+      const sBairro = s.Bairro || s['Bairro '] || "";
+
       const okBusca = !busca ||
-        (s.Nome && s.Nome.toLowerCase().includes(busca)) ||
-        (s.Servico && s.Servico.toLowerCase().includes(busca)) ||
-        (s.Bairro && s.Bairro.toLowerCase().includes(busca));
+        sNome.toLowerCase().includes(busca) ||
+        sServico.toLowerCase().includes(busca) ||
+        sBairro.toLowerCase().includes(busca);
       return okCat && okBusca;
     });
 
@@ -114,24 +118,28 @@
       return;
     }
 
-        filtrados.forEach(s => {
-      // 1. CORREÇÃO DO WHATSAPP
-      let numeroLimpo = s.WhatsApp ? s.WhatsApp.replace(/\D/g, '') : '';
-      // Se a pessoa esqueceu o 55, o código adiciona automaticamente
+    filtrados.forEach(s => {
+      // Puxa os dados exatos da sua planilha, ignorando espaços extras nos títulos
+      const nome = s.Nome || "Sem Nome";
+      const nomeServico = s.Servico || s['Serviço'] || "Serviço não informado";
+      const nomeBairro = s.Bairro || s['Bairro '] || "Bairro não informado";
+      const nomeCategoria = s.Categoria || "Geral";
+      
+      // Puxa o whatsapp e limpa os símbolos
+      const whatsappBruto = s.WhatsApp || s['WhatsApp '] || s['Whatsapp'] || "";
+      let numeroLimpo = whatsappBruto.toString().replace(/\D/g, ''); 
+      
+      // Se não começar com 55, adiciona o 55 do Brasil
       if (numeroLimpo.length > 0 && !numeroLimpo.startsWith('55')) {
-          numeroLimpo = '55' + numeroLimpo;
+          numeroLimpo = '55' + numeroLimpo; 
       }
       
-      const msg = encodeURIComponent(`Olá ${s.Nome}! Vi seu serviço no site DivulgaEsquerda e gostaria de saber mais.`);
+      const msg = encodeURIComponent(`Olá ${nome}! Vi seu serviço no site DivulgaEsquerda e gostaria de saber mais.`);
       
-      // 2. CORREÇÃO DO NOME DO SERVIÇO (Aceita com e sem cedilha)
-      const nomeServico = s.Servico || s['Serviço'] || 'Serviço não informado';
-      const nomeBairro = s.Bairro || 'Bairro não informado';
-      const nomeCategoria = s.Categoria || 'Geral';
-
-      // Se não tiver foto, usa a padrão
-      const urlFoto = (s.Link_Foto && s.Link_Foto.trim() !== "") 
-        ? s.Link_Foto 
+      // Puxa a foto
+      const linkFotoBruto = s.Link_Foto || s['Link_Foto '] || "";
+      const urlFoto = (linkFotoBruto.trim() !== "") 
+        ? linkFotoBruto 
         : "https://via.placeholder.com/400x400?text=Sem+Foto";
 
       const card = document.createElement('div');
@@ -140,7 +148,7 @@
         <img class="card-img" src="${urlFoto}" alt="${nomeServico}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Foto'">
         <div class="card-info">
           <span class="card-tag">${nomeCategoria}</span>
-          <p class="card-name">${s.Nome}</p>
+          <p class="card-name">${nome}</p>
           <p class="card-service">${nomeServico} • ${nomeBairro}</p>
           <a class="btn-wa" href="https://api.whatsapp.com/send?phone=${numeroLimpo}&text=${msg}" target="_blank">
             💬 Chamar no WhatsApp
@@ -149,3 +157,11 @@
       `;
       feed.appendChild(card);
     });
+  }
+
+  searchInput.addEventListener('input', render);
+  carregarPlanilha();
+</script>
+
+</body>
+</html>
