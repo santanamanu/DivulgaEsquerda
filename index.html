@@ -114,12 +114,22 @@
       return;
     }
 
-    filtrados.forEach(s => {
-      // Limpa o número do WhatsApp (tira traços, parênteses, espaços)
-      const numeroLimpo = s.WhatsApp ? s.WhatsApp.replace(/\D/g, '') : '';
+        filtrados.forEach(s => {
+      // 1. CORREÇÃO DO WHATSAPP
+      let numeroLimpo = s.WhatsApp ? s.WhatsApp.replace(/\D/g, '') : '';
+      // Se a pessoa esqueceu o 55, o código adiciona automaticamente
+      if (numeroLimpo.length > 0 && !numeroLimpo.startsWith('55')) {
+          numeroLimpo = '55' + numeroLimpo;
+      }
+      
       const msg = encodeURIComponent(`Olá ${s.Nome}! Vi seu serviço no site DivulgaEsquerda e gostaria de saber mais.`);
       
-      // Se não tiver foto, usa uma imagem padrão
+      // 2. CORREÇÃO DO NOME DO SERVIÇO (Aceita com e sem cedilha)
+      const nomeServico = s.Servico || s['Serviço'] || 'Serviço não informado';
+      const nomeBairro = s.Bairro || 'Bairro não informado';
+      const nomeCategoria = s.Categoria || 'Geral';
+
+      // Se não tiver foto, usa a padrão
       const urlFoto = (s.Link_Foto && s.Link_Foto.trim() !== "") 
         ? s.Link_Foto 
         : "https://via.placeholder.com/400x400?text=Sem+Foto";
@@ -127,23 +137,15 @@
       const card = document.createElement('div');
       card.className = 'card';
       card.innerHTML = `
-        <img class="card-img" src="${urlFoto}" alt="${s.Servico || 'Serviço'}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Foto'">
+        <img class="card-img" src="${urlFoto}" alt="${nomeServico}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Foto'">
         <div class="card-info">
-          <span class="card-tag">${s.Categoria || 'Geral'}</span>
+          <span class="card-tag">${nomeCategoria}</span>
           <p class="card-name">${s.Nome}</p>
-          <p class="card-service">${s.Servico} • ${s.Bairro}</p>
-          <a class="btn-wa" href="https://wa.me/${numeroLimpo}?text=${msg}" target="_blank">
+          <p class="card-service">${nomeServico} • ${nomeBairro}</p>
+          <a class="btn-wa" href="https://api.whatsapp.com/send?phone=${numeroLimpo}&text=${msg}" target="_blank">
             💬 Chamar no WhatsApp
           </a>
         </div>
       `;
       feed.appendChild(card);
     });
-  }
-
-  searchInput.addEventListener('input', render);
-  carregarPlanilha();
-</script>
-
-</body>
-</html>
