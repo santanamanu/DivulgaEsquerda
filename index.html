@@ -9,7 +9,7 @@
   header { position: sticky; top: 0; z-index: 10; background: #fff; border-bottom: 1px solid #dbdbdb; padding: 12px 16px; }
   header h1 { margin: 0; font-size: 20px; text-align: center; font-weight: 700; }
   .header-desc { text-align: center; font-size: 13px; color: #555; max-width: 800px; margin: 8px auto 0; line-height: 1.4; }
-  .rainbow-bar { height: 4px; background: linear-gradient(to right, #E40303, #FF8C00, #FFED00, #008026, #004DFF, #750787); width: 100%; }
+  .brazil-bar { height: 5px; background: linear-gradient(to right, #009c3b, #ffdf00, #002776); width: 100%; }
   .controls { max-width: 1000px; margin: 0 auto; padding: 16px 16px 0; }
   .search { width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid #dbdbdb; background: #efefef; font-size: 14px; margin-bottom: 12px; outline: none; }
   .search:focus { background: #fff; border-color: #b2b2b2; }
@@ -27,19 +27,21 @@
   .card-tag { display: inline-block; font-size: 11px; padding: 2px 8px; background: #efefef; border-radius: 10px; color: #737373; margin-bottom: 10px; align-self: flex-start; }
   .btn-wa { margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 6px; background: #25D366; color: #fff; text-decoration: none; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 600; }
   .btn-wa:hover { background: #1ebe57; }
+  .btn-insta { margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: #fff; text-decoration: none; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 600; }
+  .btn-insta:hover { opacity: 0.9; }
   .empty { grid-column: 1 / -1; text-align: center; padding: 40px; color: #737373; }
 </style>
 </head>
 <body>
 
-<div class="red-bar"></div>
+<div class="brazil-bar"></div>
 <header>
-  <h1>🫂 DivulgaEsquerda</h1>
+  <h1>🫂 DivulgaDemocrático</h1>
   <p class="header-desc">Divulgação gratuita de prestadores de serviços e empreendimentos em Londrina e região, contra o boicote financeiro à pessoas de esquerda, LGBT+, e anti extrema direita.</p>
 </header>
 
 <div class="controls">
-  <input type="search" class="search" id="search" placeholder="Buscar por nome, serviço ou bairro...">
+  <input type="search" class="search" id="search" placeholder="Buscar por nome, serviço ou endereço...">
   <div class="chips" id="chips"></div>
 </div>
 
@@ -48,10 +50,7 @@
 </div>
 
 <script>
-  // =====================================================================
-  // COLE O ID DA SUA PLANILHA AQUI ENTRE AS ASPAS:
   const ID_DA_PLANILHA = "1aSoAyOQ0DsC0sDUBzyDHFebWPRRM45jmrMkVZlV0Jqg"; 
-  // =====================================================================
 
   const feed = document.getElementById('feed');
   const searchInput = document.getElementById('search');
@@ -65,8 +64,11 @@
       const resposta = await fetch(url);
       const dados = await resposta.json();
 
-      // Filtra para não mostrar linhas vazias
-      servicos = dados.filter(linha => linha.Nome && linha.Nome.trim() !== "");
+      servicos = dados.filter(linha => {
+        const nomeValido = linha.Nome && linha.Nome.trim() !== "";
+        const querAparecer = linha['Quer aparecer no site?'] || linha['Quer_aparecer_no_site'] || linha['Quer aparecer no site'] || "Sim";
+        return nomeValido && querAparecer.trim().toLowerCase() === 'sim';
+      });
       
       criarChips();
       render();
@@ -101,46 +103,56 @@
     const filtrados = servicos.filter(s => {
       const okCat = categoriaAtiva === 'Todos' || s.Categoria === categoriaAtiva;
       
-      // Previne erro caso a célula esteja vazia
       const sNome = s.Nome || "";
       const sServico = s.Servico || s['Serviço'] || "";
-      const sBairro = s.Bairro || s['Bairro '] || "";
+      const sEndereco = s.Endereço || s['Endereço '] || s.Endereco || s['Endereco '] || s.Bairro || "";
 
       const okBusca = !busca ||
         sNome.toLowerCase().includes(busca) ||
         sServico.toLowerCase().includes(busca) ||
-        sBairro.toLowerCase().includes(busca);
+        sEndereco.toLowerCase().includes(busca);
       return okCat && okBusca;
     });
 
     if (filtrados.length === 0) {
-      feed.innerHTML = '<p class="empty">Nenhum serviço encontrado 😕</p>';
+      feed.innerHTML = '<p class="empty"></p>';
       return;
     }
 
     filtrados.forEach(s => {
-      // Puxa os dados exatos da sua planilha, ignorando espaços extras nos títulos
       const nome = s.Nome || "Sem Nome";
       const nomeServico = s.Servico || s['Serviço'] || "Serviço não informado";
-      const nomeBairro = s.Bairro || s['Bairro '] || "Bairro não informado";
+      const nomeEndereco = s.Endereço || s['Endereço '] || s.Endereco || s['Endereco '] || s.Bairro || "Endereço não informado";
       const nomeCategoria = s.Categoria || "Geral";
       
-      // Puxa o whatsapp e limpa os símbolos
-      const whatsappBruto = s.WhatsApp || s['WhatsApp '] || s['Whatsapp'] || "";
+      const whatsappBruto = s.WhatsApp || s['WhatsApp '] || "";
       let numeroLimpo = whatsappBruto.toString().replace(/\D/g, ''); 
-      
-      // Se não começar com 55, adiciona o 55 do Brasil
       if (numeroLimpo.length > 0 && !numeroLimpo.startsWith('55')) {
           numeroLimpo = '55' + numeroLimpo; 
       }
       
-      const msg = encodeURIComponent(`Olá ${nome}! Vi seu serviço no site DivulgaEsquerda e gostaria de saber mais.`);
+      // ATUALIZADO AQUI: Busca por "Link Instagram"
+      const linkInstagram = s['Link Instagram'] || s['Link Instagram '] || s.Instagram || "";
+      let urlInstagram = "";
+      if (linkInstagram.trim() !== "") {
+          if (linkInstagram.startsWith('http')) {
+              urlInstagram = linkInstagram;
+          } else {
+              const usuario = linkInstagram.replace('@', '');
+              urlInstagram = `https://instagram.com/${usuario}`;
+          }
+      }
+
+      const msg = encodeURIComponent(`Olá ${nome}! Vi seu serviço no site DivulgaDemocrático e gostaria de saber mais.`);
       
-      // Puxa a foto
       const linkFotoBruto = s.Link_Foto || s['Link_Foto '] || "";
       const urlFoto = (linkFotoBruto.trim() !== "") 
         ? linkFotoBruto 
         : "https://via.placeholder.com/400x400?text=Sem+Foto";
+
+      const botaoInsta = urlInstagram !== "" 
+        ? `<a class="btn-insta" href="${urlInstagram}" target="_blank">📸 Ver Instagram</a>` 
+        : "";
 
       const card = document.createElement('div');
       card.className = 'card';
@@ -149,10 +161,11 @@
         <div class="card-info">
           <span class="card-tag">${nomeCategoria}</span>
           <p class="card-name">${nome}</p>
-          <p class="card-service">${nomeServico} • ${nomeBairro}</p>
+          <p class="card-service">${nomeServico} • ${nomeEndereco}</p>
           <a class="btn-wa" href="https://api.whatsapp.com/send?phone=${numeroLimpo}&text=${msg}" target="_blank">
             💬 Chamar no WhatsApp
           </a>
+          ${botaoInsta}
         </div>
       `;
       feed.appendChild(card);
